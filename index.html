@@ -3,33 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart POS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Smart POS - المقهى الذكي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
-        body { background-color: #f4f6f9; color: #2d3436; padding-bottom: 20px; }
-
-        header {
-            background: #2c3e50;
-            color: white;
-            padding: 10px 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --primary: #2c3e50;
+            --accent: #e67e22;
+            --accent-hover: #d35400;
+            --text-main: #2d3436;
+            --text-muted: #636e72;
+            --border: #edf2f7;
+            --shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+            --radius: 14px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .logo { font-size: 1.1rem; font-weight: 700; }
-        .logo i { color: #e67e22; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 25px; }
+
+        /* Header التفاعلي */
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 12px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo { font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+        .logo i { color: var(--accent); animation: pulse 2s infinite; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
 
         .nav-tabs {
             display: flex;
-            gap: 8px;
-            background: rgba(255,255,255,0.1);
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.12);
             padding: 4px;
-            border-radius: 20px;
+            border-radius: 25px;
             width: 100%;
         }
 
@@ -37,69 +62,192 @@
             background: transparent;
             border: none;
             color: white;
-            padding: 8px 0;
-            border-radius: 15px;
+            padding: 8px 12px;
+            border-radius: 20px;
             cursor: pointer;
-            font-weight: 600;
-            font-size: 0.85rem;
+            font-weight: 700;
+            font-size: 0.8rem;
             flex: 1;
             text-align: center;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
         }
 
-        .tab-btn.active { background: #e67e22; }
+        .tab-btn.active {
+            background: var(--accent);
+            box-shadow: 0 4px 10px rgba(230, 126, 34, 0.4);
+        }
 
-        .container { padding: 10px; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .container { padding: 12px; max-width: 1200px; margin: 0 auto; }
+        
+        .tab-content { 
+            display: none; 
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .tab-content.active { 
+            display: block; 
+            opacity: 1;
+            transform: translateY(0);
+        }
 
+        /* كروت المنتجات التفاعلية */
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
             margin-bottom: 15px;
         }
 
         .product-card {
-            background: white;
-            border-radius: 10px;
+            background: var(--card-bg);
+            border-radius: var(--radius);
             overflow: hidden;
-            border: 1px solid #edf2f7;
+            border: 1px solid var(--border);
             padding: 8px;
             text-align: center;
             cursor: pointer;
+            transition: var(--transition);
+            position: relative;
         }
 
-        .product-img { width: 100%; height: 90px; object-fit: cover; border-radius: 6px; }
-        .product-title { font-weight: 700; font-size: 0.85rem; margin-top: 5px; }
-        .product-stock { font-size: 0.75rem; color: #636e72; }
-        .product-price { font-weight: 700; color: #e67e22; font-size: 0.85rem; }
-
-        .cart-section {
-            background: white;
-            border-radius: 10px;
-            padding: 12px;
-            border: 1px solid #edf2f7;
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow);
+            border-color: var(--accent);
         }
 
-        .cart-header { font-weight: 700; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #f9f9f9; }
-        .qty-controls { display: flex; align-items: center; gap: 8px; }
-        .qty-btn { background: #eee; border: none; width: 24px; height: 24px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .product-card:active { transform: scale(0.96); }
 
-        .cart-summary { margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee; }
-        .summary-row { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; }
-        .checkout-btn { width: 100%; background: #e67e22; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: 700; margin-top: 8px; cursor: pointer; }
+        .product-img { 
+            width: 100%; 
+            height: 95px; 
+            object-fit: cover; 
+            border-radius: 8px; 
+            transition: var(--transition);
+        }
 
-        .form-card { background: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; }
-        .form-group { margin-bottom: 8px; }
-        .form-group label { display: block; font-size: 0.8rem; margin-bottom: 2px; }
-        .form-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; }
-        .submit-btn { width: 100%; background: #2c3e50; color: white; border: none; padding: 8px; border-radius: 4px; font-weight: 700; cursor: pointer; }
+        .product-title { font-weight: 700; font-size: 0.85rem; margin-top: 6px; }
+        .product-stock { font-size: 0.72rem; color: var(--text-muted); }
+        .product-price { font-weight: 800; color: var(--accent); font-size: 0.9rem; }
 
-        table { width: 100%; border-collapse: collapse; background: white; font-size: 0.8rem; }
-        th, td { padding: 8px; text-align: right; border-bottom: 1px solid #eee; }
-        .td-img { width: 35px; height: 35px; border-radius: 4px; object-fit: cover; }
-        .action-btn { border: none; background: none; cursor: pointer; padding: 2px 5px; }
+        /* السلة والسجلات */
+        .cart-section, .history-section {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 14px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .cart-header { 
+            font-weight: 800; 
+            border-bottom: 2px solid var(--bg-color); 
+            padding-bottom: 8px; 
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+        }
+
+        .cart-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 8px; 
+            background: var(--bg-color);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .qty-controls { display: flex; align-items: center; gap: 6px; }
+        .qty-btn { 
+            background: white; 
+            border: 1px solid var(--border); 
+            width: 26px; 
+            height: 26px; 
+            border-radius: 50%; 
+            font-weight: bold; 
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .qty-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+        .cart-summary { margin-top: 12px; padding-top: 10px; border-top: 2px solid var(--bg-color); }
+        .summary-row { display: flex; justify-content: space-between; font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; }
+        
+        .checkout-btn { 
+            width: 100%; 
+            background: var(--accent); 
+            color: white; 
+            border: none; 
+            padding: 12px; 
+            border-radius: 10px; 
+            font-weight: 800; 
+            font-size: 0.95rem;
+            margin-top: 8px; 
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .checkout-btn:hover { background: var(--accent-hover); transform: translateY(-2px); }
+
+        /* نموذج الإدارة وتعديل المبيعات */
+        .form-card { background: var(--card-bg); padding: 14px; border-radius: var(--radius); margin-bottom: 15px; border: 1px solid var(--border); }
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 3px; }
+        .form-group input { 
+            width: 100%; 
+            padding: 9px; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 8px; 
+            font-size: 0.85rem;
+            outline: none;
+            transition: var(--transition);
+        }
+        .form-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.15); }
+
+        .submit-btn { 
+            width: 100%; 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 10px; 
+            border-radius: 8px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: var(--transition);
+        }
+
+        /* الجداول والتصميم المعتمد */
+        .table-responsive { overflow-x: auto; background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: right; }
+        th, td { padding: 10px; border-bottom: 1px solid var(--border); }
+        th { background: #f8fafc; font-weight: 700; color: var(--primary); }
+        .td-img { width: 38px; height: 38px; border-radius: 6px; object-fit: cover; }
+        
+        .action-btn { 
+            border: none; 
+            background: none; 
+            cursor: pointer; 
+            padding: 4px 6px; 
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+        .action-btn:hover { background: var(--bg-color); }
+        .editable-input { width: 70px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; }
+        .editable-time { width: 130px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -109,8 +257,9 @@
             <i class="fa-solid fa-mug-hot"></i> Smart POS
         </div>
         <div class="nav-tabs">
-            <button class="tab-btn active" onclick="switchTab('pos')">نقطة البيع</button>
-            <button class="tab-btn" onclick="switchTab('admin')">إدارة المنتجات</button>
+            <button class="tab-btn active" onclick="switchTab('pos')"><i class="fa-solid fa-cash-register"></i> نقطة البيع</button>
+            <button class="tab-btn" onclick="switchTab('history')"><i class="fa-solid fa-clock-rotate-left"></i> المبيعات</button>
+            <button class="tab-btn" onclick="switchTab('admin')"><i class="fa-solid fa-boxes-stacked"></i> الإدارة</button>
         </div>
     </header>
 
@@ -125,7 +274,28 @@
                 <div id="cart-items"></div>
                 <div class="cart-summary">
                     <div class="summary-row"><span>المبلغ الكلي:</span><span id="total-price">0 د.ع</span></div>
-                    <button class="checkout-btn" onclick="checkout()">تأكيد الطلب</button>
+                    <button class="checkout-btn" onclick="checkout()"><i class="fa-solid fa-check"></i> تأكيد الطلب</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- History (سجل المبيعات) -->
+        <div id="history-tab" class="tab-content">
+            <div class="history-section">
+                <div class="cart-header"><i class="fa-solid fa-list-check"></i> سجل المبيعات السابقة (متاح للتعديل)</div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>اسم المنتج</th>
+                                <th>الكمية</th>
+                                <th>الإجمالي (د.ع)</th>
+                                <th>تاريخ ووقت البيع</th>
+                                <th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -144,7 +314,7 @@
                 </form>
             </div>
 
-            <div style="overflow-x:auto;">
+            <div class="table-responsive">
                 <table>
                     <thead>
                         <tr>
@@ -168,9 +338,14 @@
             { id: 2, name: "كابتشينو", price: 3500, stock: 25, img: "https://images.unsplash.com/photo-1534778101976-62847782c213?w=300&q=80" }
         ];
 
+        var salesHistory = [];
+
         try {
             var saved = localStorage.getItem('cafe_products');
             if(saved) products = JSON.parse(saved);
+
+            var savedSales = localStorage.getItem('cafe_sales');
+            if(savedSales) salesHistory = JSON.parse(savedSales);
         } catch(e){}
 
         var cart = [];
@@ -179,15 +354,22 @@
             localStorage.setItem('cafe_products', JSON.stringify(products));
         }
 
+        function saveSales() {
+            localStorage.setItem('cafe_sales', JSON.stringify(salesHistory));
+        }
+
         function switchTab(tabName) {
             var btns = document.querySelectorAll('.tab-btn');
             btns[0].classList.toggle('active', tabName === 'pos');
-            btns[1].classList.toggle('active', tabName === 'admin');
+            btns[1].classList.toggle('active', tabName === 'history');
+            btns[2].classList.toggle('active', tabName === 'admin');
 
             document.getElementById('pos-tab').classList.toggle('active', tabName === 'pos');
+            document.getElementById('history-tab').classList.toggle('active', tabName === 'history');
             document.getElementById('admin-tab').classList.toggle('active', tabName === 'admin');
 
             if(tabName === 'pos') renderPOS();
+            if(tabName === 'history') renderHistoryTable();
             if(tabName === 'admin') renderAdminTable();
         }
 
@@ -253,15 +435,64 @@
 
         function checkout() {
             if(cart.length === 0) return alert('السلة فارغة!');
+
+            var now = new Date();
+            var dateStr = now.toISOString().slice(0, 16);
+
             cart.forEach(function(item) {
                 var p = products.find(function(prod){ return prod.id === item.id; });
                 if(p) p.stock -= item.qty;
+
+                salesHistory.push({
+                    saleId: Date.now() + Math.random(),
+                    name: item.name,
+                    qty: item.qty,
+                    totalPrice: item.price * item.qty,
+                    time: dateStr
+                });
             });
+
             saveProducts();
+            saveSales();
             cart = [];
             renderCart();
             renderPOS();
-            alert('تم تأكيد الطلب!');
+            alert('تم تأكيد الطلب وحفظ البيع!');
+        }
+
+        function renderHistoryTable() {
+            var tbody = document.getElementById('history-table-body');
+            tbody.innerHTML = '';
+
+            salesHistory.forEach(function(sale, index) {
+                tbody.innerHTML += 
+                    '<tr>' +
+                        '<td><b>' + sale.name + '</b></td>' +
+                        '<td><input type="number" class="editable-input" value="' + sale.qty + '" onchange="updateSale(' + index + ', \'qty\', this.value)"></td>' +
+                        '<td><input type="number" class="editable-input" value="' + sale.totalPrice + '" onchange="updateSale(' + index + ', \'totalPrice\', this.value)"></td>' +
+                        '<td><input type="datetime-local" class="editable-time" value="' + sale.time + '" onchange="updateSale(' + index + ', \'time\', this.value)"></td>' +
+                        '<td>' +
+                            '<button class="action-btn" onclick="deleteSale(' + index + ')"><i class="fa-solid fa-trash" style="color:#c0392b;"></i></button>' +
+                        '</td>' +
+                    '</tr>';
+            });
+        }
+
+        function updateSale(index, key, value) {
+            if(key === 'qty' || key === 'totalPrice') {
+                salesHistory[index][key] = parseFloat(value) || 0;
+            } else {
+                salesHistory[index][key] = value;
+            }
+            saveSales();
+        }
+
+        function deleteSale(index) {
+            if(confirm('هل تريد حذف هذا السجل؟')) {
+                salesHistory.splice(index, 1);
+                saveSales();
+                renderHistoryTable();
+            }
         }
 
         function renderAdminTable() {
@@ -284,56 +515,3 @@
 
         function handleFormSubmit(e) {
             e.preventDefault();
-            var id = document.getElementById('edit-id').value;
-            var name = document.getElementById('p-name').value;
-            var price = parseFloat(document.getElementById('p-price').value);
-            var stock = parseInt(document.getElementById('p-stock').value);
-            var file = document.getElementById('p-file').files[0];
-
-            var save = function(imgUrl) {
-                if(id) {
-                    var idx = products.findIndex(function(p){ return p.id == id; });
-                    if(idx !== -1) products[idx] = { id: parseInt(id), name: name, price: price, stock: stock, img: imgUrl };
-                } else {
-                    products.push({ id: Date.now(), name: name, price: price, stock: stock, img: imgUrl });
-                }
-                saveProducts();
-                document.getElementById('product-form').reset();
-                document.getElementById('edit-id').value = '';
-                renderAdminTable();
-            };
-
-            if(file) {
-                var reader = new FileReader();
-                reader.onload = function(evt){ save(evt.target.result); };
-                reader.readAsDataURL(file);
-            } else if(id) {
-                var existing = products.find(function(p){ return p.id == id; });
-                save(existing ? existing.img : 'https://via.placeholder.com/100');
-            } else {
-                save('https://via.placeholder.com/100');
-            }
-        }
-
-        function editProduct(id) {
-            var p = products.find(function(item){ return item.id === id; });
-            if(!p) return;
-            document.getElementById('edit-id').value = p.id;
-            document.getElementById('p-name').value = p.name;
-            document.getElementById('p-price').value = p.price;
-            document.getElementById('p-stock').value = p.stock;
-        }
-
-        function deleteProduct(id) {
-            if(confirm('حذف هذا المنتج؟')) {
-                products = products.filter(function(p){ return p.id !== id; });
-                saveProducts();
-                renderAdminTable();
-            }
-        }
-
-        renderPOS();
-        renderCart();
-    </script>
-</body>
-</html>
