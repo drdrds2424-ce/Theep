@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تطبيق SaaS متكامل - Supabase Auth & Pro Features</title>
+  
+  <!-- Supabase JS Client عبر CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: #f4f6f9; color: #333; padding: 40px 20px; display: flex; justify-content: center; }
+    .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 500px; }
+    h2 { margin-bottom: 20px; color: #111; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; }
+    input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
+    button { width: 100%; padding: 12px; background: #0066ff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: bold; margin-top: 10px; }
+    button:hover { background: #0052cc; }
+    .btn-secondary { background: #6c757d; }
+    .btn-secondary:hover { background: #5a6268; }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-bottom: 15px; }
+    .badge-free { background: #e2e3e5; color: #383d41; }
+    .badge-pro { background: #d4edda; color: #155724; }
+    .hidden { display: none !important; }
+    .pro-box { background: #eef6ff; border: 2px dashed #0066ff; padding: 20px; border-radius: 8px; margin-top: 20px; text-align: center; }
+    .upgrade-box { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: center; color: #856404; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>تطبيق SaaS بسيط</h2>
+
+    <!-- قسم تسجيل الدخول / إنشاء حساب -->
+    <div id="auth-section">
+      <div class="form-group">
+        <label for="email">البريد الإلكتروني</label>
+        <input type="email" id="email" placeholder="name@example.com" required>
+      </div>
+      <div class="form-group">
+        <label for="password">كلمة المرور</label>
+        <input type="password" id="password" placeholder="••••••••" required>
+      </div>
+      <button onclick="handleLogin()">تسجيل الدخول</button>
+      <button class="btn-secondary" onclick="handleSignUp()">إنشاء حساب جديد</button>
+    </div>
+
+    <!-- قسم لوحة المستخدم (تظهر بعد تسجيل الدخول) -->
+    <div id="app-section" class="hidden">
+      <p>مرحباً بك: <strong id="user-email"></strong></p>
+      <p>حالة الحساب: <span id="subscription-badge" class="badge">جاري التحقق...</span></p>
+
+      <!-- ميزة مجانية متوفرة للجميع -->
+      <div style="margin: 20px 0; padding: 15px; border: 1px solid #eee; border-radius: 6px;">
+        <h3>الميزة المجانية</h3>
+        <p>هذه الميزة متاحة لجميع المستخدمين المسجلين.</p>
+      </div>
+
+      <!-- الميزة المدفوعة (تظهر للمشتركين فقط) -->
+      <div id="pro-features" class="pro-box hidden">
+        <h3>✨ ميزة المشتركين (Pro Feature)</h3>
+        <p>أهلاً بك في المنطقة الخاصة! يمكنك الآن الوصول للخدمة المدفوعة والتصدير الاحترافي.</p>
+      </div>
+
+      <!-- صندوق الترقية (يظهر للمستخدمين غير المشتركين) -->
+      <div id="upgrade-box" class="upgrade-box hidden">
+        <p>أنت على الخطة المجانية حالياً.</p>
+        <button onclick="redirectToCheckout()">الترقية إلى الخطة المدفوعة $9/شهر</button>
+      </div>
+
+      <button class="btn-secondary" onclick="handleLogout()" style="margin-top: 20px;">تسجيل الخروج</button>
+    </div>
+  </div>
+
+  <script>
+    // 1. تهيئة Supabase (استبدل القيم ببيانات مشروعك الخاصة)
+    const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // العناصر الرسمية من الواجهة
+    const authSection = document.getElementById('auth-section');
+    const appSection = document.getElementById('app-section');
+    const userEmailEl = document.getElementById('user-email');
+    const badgeEl = document.getElementById('subscription-badge');
+    const proFeaturesEl = document.getElementById('pro-features');
+    const upgradeBoxEl = document.getElementById('upgrade-box');
+
+    // 2. فحص حالة الجلسة عند تحميل الصفحة
+    window.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        showApp(session.user);
+      }
+    });
+
+    // 3. تسجيل الدخول
+    async function handleLogin() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        alert('خطأ في تسجيل الدخول: ' + error.message);
+      } else {
+        showApp(data.user);
+      }
+    }
+
+    // 4. إنشاء حساب جديد
+    async function handleSignUp() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      const { data, error } = await supabase.auth.signUp({ email, password });
+
+      if (error) {
+        alert('خطأ في إنشاء الحساب: ' + error.message);
+      } else {
+        alert('تم إنشاء الحساب! يرجى مراجعة بريدك الإلكتروني للتفعيل إذا طُلب ذلك.');
+        if (data.user) showApp(data.user);
+      }
+    }
+
+    // 5. تسجيل الخروج
+    async function handleLogout() {
+      await supabase.auth.signOut();
+      authSection.classList.remove('hidden');
+      appSection.classList.add('hidden');
+    }
+
+    // 6. عرض لوحة التحكم وفحص حالة الاشتراك
+    async function showApp(user) {
+      authSection.classList.add('hidden');
+      appSection.classList.remove('hidden');
+      userEmailEl.textContent = user.email;
+
+      // الاستعلام عن جدول الاشتراكات لحساب المستخدم الحالي
+      const { data: subscription, error } = await supabase
+        .from('subscriptions')
+        .select('status')
+        .eq('user_id', user.id)
+        .single();
+
+      // التحقق من حالة الاشتراك
+      if (subscription && subscription.status === 'active') {
+        // مشترك نشط (Pro)
+        badgeEl.textContent = 'اشتراك نشط (Pro)';
+        badgeEl.className = 'badge badge-pro';
+        proFeaturesEl.classList.remove('hidden');
+        upgradeBoxEl.classList.add('hidden');
+      } else {
+        // غير مشترك أو مجاني
+        badgeEl.textContent = 'خطة مجانية';
+        badgeEl.className = 'badge badge-free';
+        proFeaturesEl.classList.add('hidden');
+        upgradeBoxEl.classList.remove('hidden');
+      }
+    }
+
+    // 7. تحويل المستخدم لصفحة الدفع
+    function redirectToCheckout() {
+      const user = supabase.auth.getUser();
+      // مثال: تحويل المستخدم إلى رابط Lemon Squeezy أو Paddle المخصص وإرسال user_id مع الرابط
+      const checkoutUrl = `https://your-store.lemonsqueezy.com/checkout/buy/variant_id?checkout[custom][user_id]=${user.id}`;
+      window.location.href = checkoutUrl;
+    }
+  </script>
+</body>
+</html>
