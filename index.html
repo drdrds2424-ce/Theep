@@ -493,7 +493,7 @@
             <div class="admin-layout">
                 <div class="form-card">
                     <div class="form-title" id="form-title">إضافة منتج جديد</div>
-                    <form id="product-form" onsubmit="handleFormSubmit(event)">
+                    <form id="product-form">
                         <input type="hidden" id="edit-id">
                         
                         <div class="form-group">
@@ -660,4 +660,4 @@
                             <span class="cart-item-price">${Number(item.price).toLocaleString()} × ${item.qty} = ${itemTotal.toLocaleString()} د.ع</span>
                         </div>
                         <div class="qty-controls">
-              
+                            <button class="qty-bt
