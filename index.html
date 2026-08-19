@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام إدارة وتطبيقات المقهى</title>
-    <!-- خط Cairo المميز للأدوار الرقمية -->
+    <!-- خط Cairo المميز -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- Font Awesome للأيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -35,7 +35,7 @@
             padding-bottom: 40px;
         }
 
-        /* Nav Header */
+        /* Header */
         header {
             background: var(--primary);
             color: white;
@@ -104,7 +104,7 @@
             display: block;
         }
 
-        /* --- واجهة البيع المباشر --- */
+        /* POS Section */
         .pos-layout {
             display: grid;
             grid-template-columns: 1fr 380px;
@@ -133,6 +133,7 @@
             cursor: pointer;
             display: flex;
             flex-direction: column;
+            user-select: none;
         }
 
         .product-card:hover {
@@ -140,11 +141,16 @@
             box-shadow: 0 12px 25px rgba(0,0,0,0.08);
         }
 
+        .product-card:active {
+            transform: scale(0.98);
+        }
+
         .product-img {
             width: 100%;
             height: 140px;
             object-fit: cover;
             background: #eee;
+            pointer-events: none;
         }
 
         .product-info {
@@ -153,6 +159,7 @@
             flex-direction: column;
             flex-grow: 1;
             justify-content: space-between;
+            pointer-events: none;
         }
 
         .product-title {
@@ -173,7 +180,7 @@
             font-size: 1.1rem;
         }
 
-        /* Cart Sidebar */
+        /* Cart Section */
         .cart-section {
             background: var(--card-bg);
             border-radius: var(--radius);
@@ -297,7 +304,7 @@
             background: #d35400;
         }
 
-        /* --- واجهة إدارة المنتجات --- */
+        /* Admin Section */
         .admin-layout {
             display: grid;
             grid-template-columns: 360px 1fr;
@@ -366,7 +373,6 @@
             background: #1a252f;
         }
 
-        /* Table */
         .table-wrapper {
             background: var(--card-bg);
             border-radius: var(--radius);
@@ -440,7 +446,7 @@
 
     <div class="container">
         
-        <!-- =================== tab 1: POS =================== -->
+        <!-- POS Tab -->
         <div id="pos-tab" class="tab-content active">
             <div class="pos-layout">
                 <div class="products-grid" id="pos-products">
@@ -474,7 +480,7 @@
             </div>
         </div>
 
-        <!-- =================== tab 2: Admin =================== -->
+        <!-- Admin Tab -->
         <div id="admin-tab" class="tab-content">
             <div class="admin-layout">
                 <div class="form-card">
@@ -528,22 +534,29 @@
     </div>
 
     <script>
-        // البيانات الافتراضية
-        let products = JSON.parse(localStorage.getItem('cafe_products')) || [
-            { id: 1, name: "اسبريسو", price: 2500, stock: 40, img: "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=300&q=80" },
-            { id: 2, name: "كابتشينو", price: 3500, stock: 25, img: "https://images.unsplash.com/photo-1534778101976-62847782c213?w=300&q=80" },
-            { id: 3, name: "لاتيه ميامي", price: 4000, stock: 15, img: "https://images.unsplash.com/photo-1570968915860-54d5c301fa9f?w=300&q=80" },
-            { id: 4, name: "وافل شوكولاتة", price: 5000, stock: 10, img: "https://images.unsplash.com/photo-1562376552-0d160a2f238d?w=300&q=80" }
-        ];
+        let products = [];
+        try {
+            products = JSON.parse(localStorage.getItem('cafe_products')) || [];
+        } catch(e) {
+            products = [];
+        }
+
+        if (!products || products.length === 0) {
+            products = [
+                { id: 1, name: "اسبريسو", price: 2500, stock: 40, img: "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=300&q=80" },
+                { id: 2, name: "كابتشينو", price: 3500, stock: 25, img: "https://images.unsplash.com/photo-1534778101976-62847782c213?w=300&q=80" },
+                { id: 3, name: "لاتيه ميامي", price: 4000, stock: 15, img: "https://images.unsplash.com/photo-1570968915860-54d5c301fa9f?w=300&q=80" },
+                { id: 4, name: "وافل شوكولاتة", price: 5000, stock: 10, img: "https://images.unsplash.com/photo-1562376552-0d160a2f238d?w=300&q=80" }
+            ];
+            localStorage.setItem('cafe_products', JSON.stringify(products));
+        }
 
         let cart = [];
 
-        // حفظ البيانات
         function saveProducts() {
             localStorage.setItem('cafe_products', JSON.stringify(products));
         }
 
-        // التنقل بين التبويبات
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -559,31 +572,36 @@
             }
         }
 
-        // --- عرض المنتجات في البيع المباشر ---
         function renderPOS() {
             const grid = document.getElementById('pos-products');
+            if(!grid) return;
             grid.innerHTML = '';
 
             products.forEach(p => {
-                grid.innerHTML += `
-                    <div class="product-card" onclick="addToCart(${p.id})">
-                        <img src="${p.img}" alt="${p.name}" class="product-img" onerror="this.src='https://via.placeholder.com/150'">
-                        <div class="product-info">
-                            <div>
-                                <div class="product-title">${p.name}</div>
-                                <div class="product-stock">المتبقي: ${p.stock}</div>
-                            </div>
-                            <div class="product-price">${p.price.toLocaleString()} د.ع</div>
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.onclick = () => addToCart(p.id);
+                card.innerHTML = `
+                    <img src="${p.img}" alt="${p.name}" class="product-img" onerror="this.src='https://via.placeholder.com/150'">
+                    <div class="product-info">
+                        <div>
+                            <div class="product-title">${p.name}</div>
+                            <div class="product-stock">المتبقي: ${p.stock}</div>
                         </div>
+                        <div class="product-price">${Number(p.price).toLocaleString()} د.ع</div>
                     </div>
                 `;
+                grid.appendChild(card);
             });
         }
 
-        // --- التعامل مع السلة ---
         function addToCart(id) {
             const product = products.find(p => p.id === id);
-            if (!product || product.stock <= 0) return alert('المنتج غير متوفر بالمخزون!');
+            if (!product) return;
+            if (product.stock <= 0) {
+                alert('المنتج غير متوفر بالمخزون!');
+                return;
+            }
 
             const cartItem = cart.find(item => item.id === id);
             if (cartItem) {
@@ -604,7 +622,7 @@
 
             if (cartItem) {
                 cartItem.qty += change;
-                if (cartItem.qty > product.stock) cartItem.qty = product.stock;
+                if (product && cartItem.qty > product.stock) cartItem.qty = product.stock;
                 if (cartItem.qty <= 0) {
                     cart = cart.filter(item => item.id !== id);
                 }
@@ -614,6 +632,7 @@
 
         function renderCart() {
             const container = document.getElementById('cart-items');
+            if(!container) return;
             container.innerHTML = '';
 
             let totalCount = 0;
@@ -627,21 +646,121 @@
                     totalCount += item.qty;
                     totalPrice += itemTotal;
 
-                    container.innerHTML += `
-                        <div class="cart-item">
-                            <div class="cart-item-details">
-                                <span class="cart-item-title">${item.name}</span>
-                                <span class="cart-item-price">${item.price.toLocaleString()} × ${item.qty} = ${itemTotal.toLocaleString()} د.ع</span>
-                            </div>
-                            <div class="qty-controls">
-                                <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
-                                <span>${item.qty}</span>
-                                <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
-                            </div>
+                    const div = document.createElement('div');
+                    div.className = 'cart-item';
+                    div.innerHTML = `
+                        <div class="cart-item-details">
+                            <span class="cart-item-title">${item.name}</span>
+                            <span class="cart-item-price">${Number(item.price).toLocaleString()} × ${item.qty} = ${itemTotal.toLocaleString()} د.ع</span>
+                        </div>
+                        <div class="qty-controls">
+                            <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
+                            <span>${item.qty}</span>
+                            <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
                         </div>
                     `;
+                    container.appendChild(div);
                 });
             }
 
             document.getElementById('total-count').innerText = totalCount;
-            document.getElementById('total-price').innerText = totalP
+            document.getElementById('total-price').innerText = totalPrice.toLocaleString() + ' د.ع';
+        }
+
+        function clearCart() {
+            if (cart.length === 0) {
+                alert('السلة فارغة!');
+                return;
+            }
+            
+            cart.forEach(cartItem => {
+                const prod = products.find(p => p.id === cartItem.id);
+                if (prod) prod.stock -= cartItem.qty;
+            });
+
+            saveProducts();
+            cart = [];
+            renderCart();
+            renderPOS();
+            alert('تم تأكيد الطلب بنجاح!');
+        }
+
+        function renderAdminTable() {
+            const tbody = document.getElementById('admin-table-body');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            products.forEach(p => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><img src="${p.img}" class="td-img" onerror="this.src='https://via.placeholder.com/50'"></td>
+                        <td><b>${p.name}</b></td>
+                        <td>${Number(p.price).toLocaleString()} د.ع</td>
+                        <td>${p.stock}</td>
+                        <td>
+                            <button class="action-btn edit-btn" onclick="editProduct(${p.id})"><i class="fa-solid fa-pen"></i></button>
+                            <button class="action-btn delete-btn" onclick="deleteProduct(${p.id})"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const name = document.getElementById('p-name').value;
+            const price = parseFloat(document.getElementById('p-price').value);
+            const stock = parseInt(document.getElementById('p-stock').value);
+            const img = document.getElementById('p-img').value;
+
+            if (id) {
+                const index = products.findIndex(p => p.id == id);
+                if (index !== -1) {
+                    products[index] = { id: parseInt(id), name, price, stock, img };
+                }
+            } else {
+                products.push({ id: Date.now(), name, price, stock, img });
+            }
+
+            saveProducts();
+            resetForm();
+            renderAdminTable();
+        }
+
+        function editProduct(id) {
+            const p = products.find(item => item.id === id);
+            if (!p) return;
+
+            document.getElementById('edit-id').value = p.id;
+            document.getElementById('p-name').value = p.name;
+            document.getElementById('p-price').value = p.price;
+            document.getElementById('p-stock').value = p.stock;
+            document.getElementById('p-img').value = p.img;
+
+            document.getElementById('form-title').innerText = 'تعديل المنتج';
+            document.getElementById('submit-btn').innerText = 'تحديث البيانات';
+        }
+
+        function deleteProduct(id) {
+            if (confirm('هل أنت تأكد من حذف هذا المنتج؟')) {
+                products = products.filter(p => p.id !== id);
+                saveProducts();
+                renderAdminTable();
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('product-form').reset();
+            document.getElementById('edit-id').value = '';
+            document.getElementById('form-title').innerText = 'إضافة منتج جديد';
+            document.getElementById('submit-btn').innerText = 'حفظ المنتج';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderPOS();
+        });
+    </script>
+</body>
+</html>
+
